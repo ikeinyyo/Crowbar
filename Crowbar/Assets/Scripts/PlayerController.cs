@@ -4,11 +4,10 @@ public class PlayerController : MonoBehaviour
 {
     public float Speed = 8;
     public float JumpForce = 10;
-    public float HorizontalJumpForce = 3;
 
     private Rigidbody2D _rigidbody2D;
-    bool isRigthMove = true;
-    bool isJump = true;
+    private bool _isRightMove = true;
+    private bool _isJump = true;
 
     void Start()
     {
@@ -26,9 +25,9 @@ public class PlayerController : MonoBehaviour
     private void Flip()
     {
         var horizontalMovement = Input.GetAxis("Horizontal");
-        if (horizontalMovement < 0 && isRigthMove || horizontalMovement > 0 && !isRigthMove)
+        if (horizontalMovement < 0 && _isRightMove || horizontalMovement > 0 && !_isRightMove)
         {
-            isRigthMove = !isRigthMove;
+            _isRightMove = !_isRightMove;
             gameObject.transform.localScale = Vector3.Scale(gameObject.transform.localScale, new Vector3(-1, 1, 1));
         }
     }
@@ -36,21 +35,13 @@ public class PlayerController : MonoBehaviour
     private void Move()
     {
         var horizontalMovement = Input.GetAxis("Horizontal");
-        if (!isJump)
-        {
-            _rigidbody2D.velocity = new Vector2(horizontalMovement * Speed, _rigidbody2D.velocity.y);
-        }
-        else
-        {
-            var velocity = _rigidbody2D.velocity.x + horizontalMovement * Speed;
-            var sign = Mathf.Sign(velocity);
-            _rigidbody2D.velocity = new Vector2(Mathf.Min(Mathf.Abs(velocity), Speed / 2) * sign, _rigidbody2D.velocity.y);
-        }
+        var velocity = _isJump ? horizontalMovement * Speed / 2 : horizontalMovement * Speed;
+        _rigidbody2D.velocity = new Vector2(velocity, _rigidbody2D.velocity.y);
     }
 
     private void Jump()
     {
-        if (!isJump && Input.GetButtonDown("Jump"))
+        if (!_isJump && Input.GetButtonDown("Jump"))
         {
             _rigidbody2D.AddForce(new Vector2(0, JumpForce), ForceMode2D.Impulse);
         }
@@ -62,7 +53,7 @@ public class PlayerController : MonoBehaviour
         {
             var bulletSpawn = transform.FindChild("BulletSpawn");
             var bullet = Instantiate(Resources.Load("Bullet"), bulletSpawn.position, Quaternion.identity) as GameObject;
-            bullet.GetComponent<BulletController>().Shot(isRigthMove ? 1 : -1);
+            bullet.GetComponent<BulletController>().Shot(_isRightMove ? 1 : -1);
             Physics2D.IgnoreCollision(gameObject.GetComponent<Collider2D>(), bullet.GetComponent<Collider2D>());
         }
     }
@@ -71,7 +62,7 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Floor")
         {
-            isJump = false;
+            _isJump = false;
         }
     }
 
@@ -79,7 +70,7 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Floor")
         {
-            isJump = true;
+            _isJump = true;
         }
     }
 }
